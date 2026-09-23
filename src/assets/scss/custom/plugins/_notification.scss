@@ -1,0 +1,37 @@
+.app-notification {
+	margin-top: 1rem;
+	margin-right: 1rem;
+	padding: 1rem 1rem;
+
+	display: block;
+	box-sizing: border-box;
+	text-align: left;
+	font-size: 12px;
+	color: white;
+	background: $blue-500;
+	border-left: 5px solid $blue-700;
+
+	.notification-title {
+		font-weight: 600;
+	}
+
+	.notification-content {
+	}
+
+	&.success {
+		background: $green-500;
+		border-left-color: $green-700;
+	}
+	&.info {
+		background: $blue-500;
+		border-left-color: $blue-700;
+	}
+	&.error {
+		background: $red-500;
+		border-left-color: $red-700;
+	}
+	&.warn {
+		background: $orange-500;
+		border-left-color: $orange-700;
+	}
+}

@@ -1,0 +1,52 @@
+.gridjs-wrapper {
+  border-radius: 0 !important;
+}
+
+.gridjs-footer {
+  border-radius: 0 !important;
+}
+
+input.gridjs-input {
+  display: block;
+  padding: 0.47rem 0.75rem;
+  font-size: .8125rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0.25rem;
+  -webkit-transition: border-color .15s ease-in-out, -webkit-box-shadow .15s ease-in-out;
+  transition: border-color .15s ease-in-out, -webkit-box-shadow .15s ease-in-out;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out, -webkit-box-shadow .15s ease-in-out;
+}
+
+input.gridjs-input:focus {
+  color: #495057;
+  background-color: #fff;
+  border-color: #b9bfc4;
+  outline: 0;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.gridjs-search-input {
+  width: 400px;
+}
+
+.gridjs-pagination .gridjs-pages button:first-child {
+  border-radius: 0;
+}
+
+.gridjs-pagination .gridjs-pages button:last-child {
+  border-radius: 0;
+}
+
+.gridjs-pagination .gridjs-pages button {
+  padding: .5rem .75rem;
+}
