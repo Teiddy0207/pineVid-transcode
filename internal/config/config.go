@@ -19,6 +19,10 @@ type Config struct {
 	BackendBaseURL    string
 	FFmpegPath        string
 	TempDir           string
+	// InternalWebhookSecret is sent as X-Internal-Token on every call to the
+	// backend (transcode callback + heartbeat); must match the backend's
+	// INTERNAL_WEBHOOK_SECRET or the backend rejects the call with 401.
+	InternalWebhookSecret string
 }
 
 func Load() *Config {
@@ -38,6 +42,8 @@ func Load() *Config {
 		BackendBaseURL:    getEnv("BACKEND_BASE_URL", "http://localhost:8080"),
 		FFmpegPath:        getEnv("FFMPEG_PATH", "ffmpeg"),
 		TempDir:           getEnv("TEMP_DIR", "/tmp/transcode"),
+
+		InternalWebhookSecret: getEnv("INTERNAL_WEBHOOK_SECRET", ""),
 	}
 }
 

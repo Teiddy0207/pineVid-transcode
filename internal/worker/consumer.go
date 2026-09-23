@@ -62,7 +62,7 @@ func NewTranscodeWorker(cfg *config.Config, s3 *storage.S3Client, tc *transcoder
 		logger:     logger,
 		nc:         nc,
 		js:         js,
-		heartbeat:  NewHeartbeatReporter(cfg.BackendBaseURL),
+		heartbeat:  NewHeartbeatReporter(cfg.BackendBaseURL, cfg.InternalWebhookSecret),
 	}, nil
 }
 
@@ -215,6 +215,10 @@ func (w *TranscodeWorker) notifyBackendFailure(videoID, errorMsg string) {
 	_ = w.sendWebhook(payload)
 }
 
+// internalTokenHeader authenticates this worker to the backend's internal
+// webhook endpoints (see backend middleware.RequireInternalSecret).
+const internalTokenHeader = "X-Internal-Token"
+
 func (w *TranscodeWorker) sendWebhook(payload WebhookPayload) error {
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -227,6 +231,7 @@ func (w *TranscodeWorker) sendWebhook(payload WebhookPayload) error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(internalTokenHeader, w.cfg.InternalWebhookSecret)
 
 	resp, err := client.Do(req)
 	if err != nil {

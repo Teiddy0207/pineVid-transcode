@@ -18,9 +18,10 @@ import (
 // usage and current job to the backend's admin dashboard, so
 // GetWorkersStatus reflects actual running workers instead of hardcoded data.
 type HeartbeatReporter struct {
-	workerID   string
-	backendURL string
-	client     *http.Client
+	workerID      string
+	backendURL    string
+	internalToken string
+	client        *http.Client
 
 	processing atomic.Bool
 	currentJob atomic.Value // string
@@ -34,14 +35,15 @@ type cpuSample struct {
 	at    time.Time
 }
 
-func NewHeartbeatReporter(backendBaseURL string) *HeartbeatReporter {
+func NewHeartbeatReporter(backendBaseURL, internalToken string) *HeartbeatReporter {
 	hostname, _ := os.Hostname()
 	workerID := fmt.Sprintf("worker-%s-%d", hostname, os.Getpid())
 
 	h := &HeartbeatReporter{
-		workerID:   workerID,
-		backendURL: strings.TrimRight(backendBaseURL, "/") + "/v1/admin/workers/heartbeat",
-		client:     &http.Client{Timeout: 5 * time.Second},
+		workerID:      workerID,
+		backendURL:    strings.TrimRight(backendBaseURL, "/") + "/v1/admin/workers/heartbeat",
+		internalToken: internalToken,
+		client:        &http.Client{Timeout: 5 * time.Second},
 	}
 	h.currentJob.Store("")
 	return h
@@ -105,6 +107,7 @@ func (h *HeartbeatReporter) send() {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(internalTokenHeader, h.internalToken)
 
 	resp, err := h.client.Do(req)
 	if err != nil {
