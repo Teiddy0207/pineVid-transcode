@@ -1,0 +1,6 @@
+.git
+.env
+.env.*
+ffmpeg-release-amd64-static.tar.xz
+node_modules
+src/node_modules

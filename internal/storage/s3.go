@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sonla/transcode/internal/config"
+	"sort"
 	"strings"
 	"time"
 
@@ -106,11 +107,25 @@ func (s *S3Client) UploadHLSFiles(ctx context.Context, localDir, prefix string) 
 		}
 	}
 
-	return filepath.Walk(localDir, func(path string, info os.FileInfo, err error) error {
+	var files []string
+	if err := filepath.Walk(localDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return err
 		}
+		files = append(files, path)
+		return nil
+	}); err != nil {
+		return err
+	}
 
+	// master.m3u8 goes last: until it exists the video is not playable, so a
+	// half-finished upload never exposes a playlist pointing at missing
+	// segments.
+	sort.SliceStable(files, func(i, j int) bool {
+		return filepath.Base(files[i]) != "master.m3u8" && filepath.Base(files[j]) == "master.m3u8"
+	})
+
+	for _, path := range files {
 		relPath, err := filepath.Rel(localDir, path)
 		if err != nil {
 			return err
@@ -131,7 +146,7 @@ func (s *S3Client) UploadHLSFiles(ctx context.Context, localDir, prefix string) 
 		if err != nil {
 			return fmt.Errorf("failed to upload %s to S3: %w", path, err)
 		}
+	}
 
-		return nil
-	})
+	return nil
 }

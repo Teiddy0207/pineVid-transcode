@@ -14,6 +14,11 @@ import (
 	"time"
 )
 
+// internalTokenHeader authenticates this worker's heartbeat to the backend
+// (backend middleware.RequireInternalSecret). The transcode webhook itself is
+// HMAC-signed instead (webhook.go).
+const internalTokenHeader = "X-Internal-Token"
+
 // HeartbeatReporter periodically self-reports this process's real CPU/RAM
 // usage and current job to the backend's admin dashboard, so
 // GetWorkersStatus reflects actual running workers instead of hardcoded data.

@@ -1,0 +1,31 @@
+# Dockerfile.worker — NATS JetStream transcode worker with static FFmpeg.
+# Build context: transcode/
+# Build: docker build -f Dockerfile.worker -t pipevid-transcode-worker .
+
+# ── Stage 1: Go modules ───────────────────────────────────────────────────────
+FROM golang:1.25-alpine AS modules
+COPY go.mod go.sum /modules/
+WORKDIR /modules
+RUN go mod download
+
+# ── Stage 2: Builder ─────────────────────────────────────────────────────────
+FROM golang:1.25-alpine AS builder
+COPY --from=modules /go/pkg /go/pkg
+COPY . /src
+WORKDIR /src
+# Build only the worker binary (not the legacy Gin web server)
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -o /bin/transcode-worker ./cmd/worker
+
+# ── Stage 3: Runtime ─────────────────────────────────────────────────────────
+FROM alpine:3.20
+RUN apk add --no-cache ca-certificates tzdata curl
+ENV TZ=Asia/Ho_Chi_Minh
+WORKDIR /app
+# Copy static FFmpeg binaries (pre-downloaded, avoids downloading at build time)
+COPY ffmpeg-7.0.2-amd64-static/ffmpeg /usr/local/bin/ffmpeg
+COPY ffmpeg-7.0.2-amd64-static/ffprobe /usr/local/bin/ffprobe
+RUN chmod +x /usr/local/bin/ffmpeg /usr/local/bin/ffprobe
+# Copy the worker binary
+COPY --from=builder /bin/transcode-worker /app/transcode-worker
+CMD ["/app/transcode-worker"]
