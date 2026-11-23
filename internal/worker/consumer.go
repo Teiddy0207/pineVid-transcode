@@ -75,7 +75,20 @@ type TranscodeWorker struct {
 }
 
 func NewTranscodeWorker(cfg *config.Config, s3 *storage.S3Client, tc *transcoder.Transcoder, logger *zap.Logger) (*TranscodeWorker, error) {
-	nc, err := nats.Connect(cfg.NatsURL)
+	// Reconnect forever: the client default (60 × 2 s) closes the connection
+	// for good after a ~2 min NATS outage, leaving a running worker that never
+	// receives another job (observed on the VPS, bench F3).
+	nc, err := nats.Connect(cfg.NatsURL,
+		nats.Name("transcode-worker"),
+		nats.MaxReconnects(-1),
+		nats.ReconnectWait(time.Second),
+		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
+			logger.Warn("nats disconnected", zap.Error(err))
+		}),
+		nats.ReconnectHandler(func(c *nats.Conn) {
+			logger.Info("nats reconnected", zap.String("url", c.ConnectedUrlRedacted()))
+		}),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to NATS server at %s: %w", cfg.NatsURL, err)
 	}
